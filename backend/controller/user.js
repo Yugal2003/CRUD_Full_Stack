@@ -8,7 +8,8 @@ const createUser = async(req,res) =>{
 
         res.json({
             success : true,
-            message : "User Create SuccessFully !"
+            message : "User Create SuccessFully !",
+            UserId : userData.userId
         })
     } 
     catch (error) {
@@ -68,8 +69,8 @@ const fetchAllUser = async(req,res) =>{
 
 const fetchSingleUser = async(req,res) =>{
     try {
-        const userId = req.params.id;
-        const user =  await userModel.findById(userId)
+        const userId = req.params.userId;
+        const user =  await userModel.findOne({userId})
         if (user) {
             res.json({
                 success: true,
@@ -91,48 +92,40 @@ const fetchSingleUser = async(req,res) =>{
     }
 }
 
-const updateUser = async(req,res) =>{
+const updateUser = async(req, res) => {
     try {
-        const userId = req.params.id;
-        const userIsAvail = await userModel.findById(userId);
-        if (userIsAvail) {
-            await userModel.findByIdAndUpdate(userId,req.body);
-            res.json({
-                success : true,
-                message : "Edit User Successfully !"
-            }) 
-        } else {
-            res.status(404).json({
-                success: false,
-                message: "User not found in DataBase !"
-            });
+        const { userId } = req.params;
+
+        const user = await userModel.findOneAndUpdate({ userId: userId }, req.body, { new: true });
+
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found' });
         }
+
+        res.json({ success: true, message: 'User updated successfully', user });
     } 
     catch (error) {
-        res.status(404).json({
-            success : false,
-            message : "Error in User Edit !"
-        })
+        console.error(error);
+        res.status(500).json({
+            success: false,
+            message: 'Error in User Edit!'
+        });
     }
-}
+};
+
 
 
 const deleteUser = async(req,res) =>{
     try {
-        const userId = req.params.id;
-        const userIsAvail = await userModel.findById(userId);
-        if (userIsAvail) {
-            await userModel.findByIdAndDelete(userId);
-            res.json({
-                success : true,
-                message : "User Delete Successfully !"
-            }) 
-        } else {
-            res.status(404).json({
-                success: false,
-                message: "User not found in DataBase !"
-            });
+        const {userId} = req.params;
+
+        const user = await userModel.findOneAndDelete({ userId: userId });
+
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found' });
         }
+
+        res.json({ success: true, message: 'User Deleted successfully', user });
     } 
     catch (error) {
         res.status(404).json({
